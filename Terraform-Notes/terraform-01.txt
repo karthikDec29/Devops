@@ -1,0 +1,122 @@
+Terraform:  IAAC
+
+1.Infrastructure as Code
+2.Infrastructure provisioning tool
+3.Ability to deploy infrastructure across multiple platforms,including public,private and on prem.
+4.Terraform uses HCL (Hashicorp Configuration Language)
+======================================================
+Installing Terraform:
+
+
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+sudo apt-get update && sudo apt-get install terraform
+
+
+========================================================
+Installing aws-cli and configure keys:
+
+1.Install aws-cli with below commands
+    sudo apt-get update.
+    sudo apt-get install awscli.
+    aws --version.
+2.Create IAM user in aws with Administrative access,copy access and secret key.
+
+3.copy keys with the below command
+    aws configure
+
+=========================================================
+Types of Iac:
+
+1.Configuration Management : 
+Ansible
+puppet
+saltstack 
+
+Designed to Install and Manage software
+Maintain standard structure
+Version control
+Idempotent
+
+2.Server Templating: 
+Docker
+vagrant
+packer
+
+Pre-installed software and Dependencies
+Virtual machine and Docker images
+Immutable Infrastructure
+
+3.Provisioning tools:
+ Terraform 
+ cloud formation
+
+Deploy infrstructure resources
+Multiple providers
+Servers,databases,network components etc
+
+===========================================================
+
+Terraform init: 
+The terraform init command is used to initialize a working directory containing Terraform configuration files. 
+This is the first command that should be run after writing a new Terraform configuration or cloning an existing one from version control. 
+It is safe to run this command multiple times.
+
+Terraform plan:
+The terraform plan command creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure. 
+By default, when Terraform creates a plan it:
+
+1.Reads the current state of any already-existing remote objects to make sure that the Terraform state is up-to-date.
+2.Compares the current configuration to the prior state and noting any differences.
+3.Proposes a set of change actions that should, if applied, make the remote objects match the configuration
+
+Terraform apply:
+The terraform apply command executes the actions proposed in a Terraform plan.
+The most straightforward way to use terraform apply is to run it without any arguments at all,
+in which case it will automatically create a new execution plan (as if you had run terraform plan) and then prompt you to approve that plan, before taking the indicated actions.
+
+Terraform validate:
+The terraform validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state
+
+Terraform show:
+The terraform show command is used to provide human-readable output from a state or plan file. This can be used to inspect a plan to ensure that the planned operations are expected, or to inspect the current state as Terraform sees it.
+
+Terraform destroy:
+The terraform destroy command is a convenient way to destroy all remote objects managed by a particular Terraform configuration.
+==============================================================================
+main.tf
+
+resource "aws_instance" "web" {
+  ami           = "ami-04505e74c0741db8d"
+  instance_type = "t2.micro"
+  key_name   = "LevelupDevops"
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+
+provider.tf
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+
+Commands to execute above script:
+
+terraform init
+terraform plan
+terraform apply
+terraform show
+terraform validate
+terraform destroy
+
+
+====================================================================
+terraform.tfstate:
+This state is used by Terraform to map real world resources to your configuration, keep track of metadata, 
+and to improve performance for large infrastructures. This state is stored by default in a local file named "terraform. tfstate", 
+but it can also be stored remotely, which works better in a team environment.

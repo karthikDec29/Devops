@@ -1,0 +1,351 @@
+Provider: 
+
+provider meta-argument specifies which provider to be used for a resource. 
+This is useful when you are using multiple providers which is usually used when you are creating multi-region resources. 
+For differentiating those providers, you use an alias field.
+The resource then reference the same alias field of the provider as provider.alias to tell which one to use.
+
+
+
+Example for provider:
+---------------------
+
+main.tf
+-------
+
+provider "aws" {
+  alias = "west"
+  region = "us-west-2"
+}
+
+
+resource "aws_instance" "foo" {
+   provider = aws.west
+
+
+     ami           = var.ami # us-west-2
+     key_name      = var.key
+     instance_type = var.instance_type
+     tags = {
+      Name  = "East-west"
+}
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+===========================================================================
+
+Life-cycle:
+
+The lifecycle meta-argument defines the lifecycle for the resource. 
+As per the resource behaviour, Terraform can do the following:
+
+1.create a resource
+2.destroy a resource
+3.updated resource in place
+4.update resource by deleting existing and create new
+
+lifecycle is a nested block under resource that is used to customise that behaviour. 
+Here are the following customisation that are available under lifecycle block
+
+create_before_destroy: (Type: Bool)
+For resource, where Terraform cannot do an in place updation due to API limitation, 
+its default behaviour is to destroy the resource first and then re create it. 
+This can be changed by using this argument. It will first create the updated resource and then delete the old one.
+
+prevent_destroy: (Type: Bool)
+This will prevent the resource from destroying. 
+It is a useful measure where we want to prevent a resource against accidental replacement such as database instances.
+
+ignore_changes: (Type: List(Attribute Names))
+By default, If Terraform detects any difference in the current state, it plans to update the remote object to match configuration. 
+The ignore_changes feature is intended to be used when a resource is created with references to data that may change in the future, 
+but should not affect said resource after its creation. It expects a list or map of values, whose updation will not recreate the resource. 
+If we want all attributes to be passed here, we can simply use all.
+
+
+Example:
+--------
+resource "aws_instance" "foo" {
+
+
+     ami           = var.ami # us-west-2
+     key_name      = var.key
+     instance_type = var.instance_type
+      lifecycle {
+    ignore_changes = [
+      tags,
+    ]
+  }
+     tags = {
+      Name  = "East",
+      demo   = "terraform"
+}
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+
+=================================================================
+
+depends_on:
+----------
+
+Terraform has a feature of identifying resource dependency. 
+This means that Terraform internally knows the sequence in which the dependent resources needs to be created whereas the independent resources are created parallelly.
+
+But in some scenarios, some dependencies are there that cannot be automatically inferred by Terraform. 
+In these scenarios, a resource relies on some other resource’s behaviour but it doesn’t access any of the resource’s data in arguments.
+For those dependencies, we’ll use depends_on meta-argument to explicitly define the dependency.
+
+depends_on meta-argument must be a list of references to other resources in the same calling resource.
+
+This argument is specified in resources as well as in modules (Terraform version 0.13+)
+
+
+Example:
+
+resource "aws_iam_role" "role" {
+  name = "demo-role"
+  assume_role_policy = "..."
+}
+
+resource "aws_iam_instance_profile" "instance-profile" {
+  # Terraform can infer automatically that the role must be created first.
+  role = aws_iam_role.role.name
+}
+
+resource "aws_iam_role_policy" "policy" {
+  name   = "demo-policy"
+  role   = aws_iam_role.role.name
+  policy = jsonencode({
+    "Statement" = [{
+      "Action" = "s3:*",
+      "Effect" = "Allow",
+    }],
+  })
+}
+
+resource "aws_instance" "ec2" {
+  ami           = "ami-a1b2c3d4"
+  instance_type = "t2.micro"
+
+  # Terraform can infer from this that the instance profile must
+  # be created before the EC2 instance.
+  iam_instance_profile = aws_iam_instance_profile.instance-profile
+
+  # However, if software running in this EC2 instance needs access
+  # to the S3 API in order to boot properly, there is also a "hidden"
+  # dependency on the aws_iam_role_policy that Terraform cannot
+  # automatically infer, so it must be declared explicitly:
+  depends_on = [
+    aws_iam_role_policy.policy
+  ]
+}
+
+=======================================================================================================
+                                            PROVISIONERS
+=======================================================================================================
+
+Provisioners: 
+
+Provisioners are used to execute scripts on a local or remote machine as part of resource creation or destruction. 
+Provisioners can be used to bootstrap a resource, cleanup before destroy, run configuration management, etc.
+
+1.file-provisioner
+2.local-exec
+3.remote-exec
+
+File-provisioner:
+
+File provisioner allows you to transfer files locally on which terraform code is being executed to the resource which is being provisioned. 
+For example, you want to copy a configuration file or directory from the local to your EC2 instance. This can be easily accomplished by File provisioner.
+
+File-provisioner Example:
+
+main.tf:
+-------
+
+provider "aws" {
+region = "us-east-1"
+}
+
+
+resource "aws_instance" "web" {
+  ami           = "ami-04bf6dcdc9ab498ca"
+  instance_type = "t2.micro"
+  key_name      = "aws_iny_lappi"
+  user_data     = "${file("httpd.sh")}"
+  vpc_security_group_ids = ["${aws_security_group.webSG.id}"]
+  tags = {
+    Name = "Test-file-provisioner"
+  }
+}
+
+
+resource "aws_security_group" "webSG" {
+  name        = "webSG"
+  description = "Allow ssh  inbound traffic"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+    
+  }
+}
+
+
+httpd.sh
+--------
+
+#! /bin/bash
+sudo yum install httpd -y
+sudo systemctl start httpd
+sudo systemctl enable httpd
+echo "<h1>Terraform Instance Launched Successfully</h1>" | sudo tee /var/www/html/index.html
+
+==============================================================================
+Local-exec:
+----------
+
+local-exec provisioner helps run a script on instance where we are running our terraform code,
+not on the resource we are creating. For example, if we want to write EC2 instance IP address to a file,
+then we can use below local-exec provisioner with our EC2 resource and save it locally in a file.
+
+
+main.tf:
+--------
+
+provider "aws" {
+region = "us-east-1"
+}
+
+
+resource "aws_instance" "web" {
+  ami           = "ami-04bf6dcdc9ab498ca"
+  instance_type = "t2.micro"
+  tags = {
+    Name = "local-exec-provisioner"
+  }
+
+  provisioner "local-exec" {
+    command = "echo ${self.private_ip}, ${self.public_ip} >> private_and_public_ips.txt"
+  }
+
+}
+================================================================================
+Remote-exec:
+
+remote-exec provisioner helps invoke a script on the remote resource once it is created.
+We can provide a list of command strings which are executed in the order they are provided.
+We can also provide scripts with a local path which is copied remotely and then executed on the remote resource.
+file provisioner is used to copy files or directories to a remote resource. 
+We can’t provide any arguments to script in remote-exec provisioner.
+We can achieve this by copying script from file provisioner and then execute a script using a list of commands.
+Provisioner which execute commands on a resource (like running a script or copying file)needs to connect to the resource which can be done through SSH.
+We can define connection method per resource or per provisioner if we want them to connect using different SSH parameters.
+
+
+httpd.sh
+--------
+
+#! /bin/bash
+sudo yum install httpd -y
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+main.tf
+-------
+
+provider "aws" {
+region = "us-east-1"
+}
+
+
+resource "aws_instance" "web" {
+  ami           = "ami-04bf6dcdc9ab498ca"
+  instance_type = "t2.micro"
+  key_name      = "aws_iny_lappi"
+  vpc_security_group_ids = ["${aws_security_group.webSG.id}"]
+  tags = {
+    Name = "remote-exec-provisioner"
+  }
+  
+}
+
+resource "null_resource" "copy_execute" {
+  
+    connection {
+    type = "ssh"
+    host = aws_instance.web.public_ip
+    user = "ec2-user"
+    private_key = file("aws_iny_lappi.pem")
+    }
+
+ 
+  provisioner "file" {
+    source      = "httpd.sh"
+    destination = "/tmp/httpd.sh"
+  }
+  
+   provisioner "remote-exec" {
+    inline = [
+      "sudo chmod 777 /tmp/httpd.sh",
+      "sh /tmp/httpd.sh",
+    ]
+  }
+  
+  depends_on = [ aws_instance.web ]
+  
+  }
+
+resource "aws_security_group" "webSG" {
+  name        = "webSG"
+  description = "Allow ssh  inbound traffic"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+    
+  }
+}
+
+
+Null-resource:
+
+null_resource which allow us to configure provisioners which are not directly associated with any resource. 
+It behaves like any other resource which needs connection and provisioner details. 
+
+

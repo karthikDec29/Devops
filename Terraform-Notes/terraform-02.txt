@@ -1,0 +1,75 @@
+Provider:A provider is a Terraform plugin that allows users to manage an external API. 
+
+Terraform providers are published and maintained by a variety of sources, including HashiCorp, 
+HashiCorp Technology Partners, and the Terraform community.
+
+1.Official Providers:
+Official providers are owned and maintained by HashiCorp.
+
+Example: AWS.Azure,GCP
+
+2.Verified Providers:
+Verified providers are owned and maintained by third-party technology partners.
+
+Example: f5 by f5network
+heroku by heroku
+digitalocean 
+
+3.Community provider:
+Community providers are published to the Terraform Registry by individual maintainers, 
+groups of maintainers, or other members of the Terraform community.
+
+Example: ucloud activedirectory etc
+
+=================================================================
+Multiple Providers:
+
+Terraform supports multiple providers to create a configuration.
+
+resource "random_pet" "my-pet" {
+   prefix = "Mr"
+   separator = "."
+    length = "1"
+}
+
+We can add above random_pet creation resource to our terraform configuration file.
+
+====================================================================
+Input variables:
+
+Each input variable must be declared using a variable block:
+
+
+main.tf:
+
+resource "aws_instance" "web" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name   = "LevelupDevops"
+  tags = var.tags
+}
+
+
+variables.tf
+
+variable "ami" {
+ type = string
+ default  = "ami-04505e74c0741db8d"
+}
+
+variable "instance_type" {
+  type = string
+    default = "t2.micro"
+}
+variable "key" {
+ type = string
+ default = "LevelupDevops"
+}
+variable "tags" {
+ type = map
+  default = {
+   "Name" =  "Helloworld",
+   "createdby" = "terraform",
+    "demo"    = "variable"
+   }
+}
