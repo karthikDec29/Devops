@@ -1,0 +1,191 @@
+Ansible playbook to create a user on all managed nodes
+vim playbook1.yml
+---
+- name: Create a user
+  hosts: all
+  tasks:
+   - name: User Creation
+     user:
+      name: Hari
+      password: lavelup
+      uid: 1256
+      home: /home/Hari
+      shell: /bin/bash
+      comment: "A regular user"
+...
+
+To check if the playbook is syntactically correct
+ansible-playbook playbook1.yml --syntax-check
+
+To execute the playbook
+ansible-playbook playbook1.yml -b
+
+==============================================================
+Ansible playbook for configuring apache2
+
+vim playbook2.yml
+---
+- name: Configuring apache2
+  hosts: all
+  tasks:
+   - name: Install apache2
+     apt:
+      name: apache2
+      state: present
+      update_cache: yes
+   - name: Edit the index.html file
+     copy:
+      content: "Welcome to Apache"
+      dest: /var/www/html/index.html
+   - name: Restart apache2
+     service:
+      name: apache2
+      state: restarted
+   - name: Check apache response on server1
+     uri:
+      url: http://172.31.23.20
+      status_code: 200
+   - name: Check apache response on server2
+     uri:
+      url: http://172.31.28.60
+      status_code: 200
+...
+
+==================================================================
+Ansible playbook for configuring tomcat9
+
+vim playbook3.yml
+---
+- name: Configuring tomcat
+  hosts: all
+  tasks:
+   - name: Install tomcat9
+     apt:
+      name: tomcat9
+      state: present
+   - name: Copy the tomcat-users.xml file
+     copy:
+      src: tomcat-users.xml
+      dest: /etc/tomcat9
+   - name: Change port of tomcat from 8080 to 9090
+     replace:
+      regexp: 8080
+      replace: 9090
+      path: /etc/tomcat9/server.xml
+   - name: Restart tomcat9
+     service:
+      name: tomcat9
+      state: restarted
+   - name: Pause for 5 min
+     pause:
+      minutes: 5
+   - name: Check url response of tomcat on server1
+     uri:
+      url: http://172.31.28.60:9090
+      status_code: 200
+   - name: Check url response of tomcat on server2
+     uri:
+      url: http://172.31.23.20:9090
+      status_code: 200
+...
+
+
+=======================================================================
+Ansible playbook to copy file from one managed node to another
+vim playbook4.yml
+---
+- name: Fetch file from server1 to controller
+  hosts: 172.31.23.20
+  tasks:
+   - name: Fetch file
+     fetch:
+      src: file2
+      dest: /tmp
+- name: Copy file to server2
+  hosts: 172.31.28.60
+  tasks:
+   - name: Copy file
+     copy:
+      src: /tmp/172.31.23.20/file2
+      dest: /home/ubuntu
+...
+
+==============================================================
+Variables in Ansible
+========================
+Ansible uses three types of variables
+1 Global Scope variabels
+2 Host Scope Variables
+3 Play Scope Varibales
+
+Global Scope Variables
+============================
+These variables are passed from the command prompt using "--extra-vars"
+and they have the highest priority
+
+Ansible playbook to install or uninstall s/w applications
+vim playbook5.yml
+---
+- name: Install s/w packages using variables
+  hosts: all
+  tasks:
+   - name: Install/Uninstall
+     apt:
+      name: "{{a}}"
+      state: "{{b}}"
+      update_cache: "{{c}}"
+...
+
+To run the playbook for installing tree
+ansible-playbook  playbook5.yml --extra-vars "a=tree b=present c=no" -b
+
+We can use the same playbook to uninstall git
+ansible-playbook  playbook5.yml --extra-vars "a=git b=absent c=no" -b
+
+===========================================================================
+vim playbook6.yml
+---
+- name: Create users and create files/dirs in the user home dir
+  hosts: all
+  tasks:
+   - name: Create user
+     user:
+      name: "{{a}}"
+      password: "{{b}}"
+      home: "{{c}}"
+   - name: Create files/dirs in users home dir
+     file:
+      name: "{{d}}"
+      state: "{{e}}"
+...
+
+To create users from the above playbook
+ansible-playbook playbook6.yml --extra-vars "a=Ramesh b=password c=/home/Ramesh d=/home/Ramesh/file1 e=touch" -b
+
+ansible-playbook playbook6.yml --extra-vars "a=Radha b=password c=/home/ubuntu/Radha d=/home/ubuntu/Radha/dir1 e=directory" -b
+
+========================================================================
+Playscope Variables
+=======================
+These variables are defined in the playbook in the "vars" section and
+they have the least priority
+vim playbook7.yml
+---
+- name: Install some s/w applications
+  hosts: all
+  vars:
+   - a: tomcat9
+   - b: present
+   - c: yes
+  tasks:
+   - name: Install/uninstall
+     apt:
+      name: "{{a}}"
+      state: "{{b}}"
+      update_cache: "{{c}}"
+...
+
+The above playbook works like a template whose default behaviour is
+to install tomcat9 but we can use the same playbook and make it
+work on some other s/w application
+ansible-playbook playbook7.yml  --extra-vars "a=tree" -b

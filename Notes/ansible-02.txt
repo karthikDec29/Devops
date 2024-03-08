@@ -1,0 +1,136 @@
+=========================================================================
+Important modules in Ansible
+=====================================
+1 command: This is used to run basic linux commands on the managed
+nodes.This is the default module of Ansible
+
+2 shell: This is used to run shell scripts or python scripts
+on the managed nodes.It is also used to run commands related
+to redirection and piping
+
+3 ping: This is used to check if the rmeote servers are pingable or not
+
+4 user: This is used to perform user administration on managed nodes
+ie creating users,assigning home dirs,deleting users etc
+
+5 copy: Used to copy files and directories to the managed nodes
+
+6 fetch: Used to copy files and directories from the managed nodes to
+  controller
+
+7 apt: Used to s/w package managemrn on DEbain,Ubuntu based machines
+
+8 yum: similar to apt but it works on Redhat linux,centos etc
+
+9 service: USed to start,stop or restart services on the managed nodes
+
+10 git: Used to perform git version controlling on managed nodes
+
+11 get_url: Used to downlaod files from remote service
+
+12 uri: Used to check if the remote url is reachable or not
+
+13 debug : Used to display some output in JSON file format
+
+14 stat: Used to capture info about files and folders present on managed nodes
+
+15 include: This is used to call child playbooks from a parent playbook
+
+16 replace: This is used to replace specific text in a file
+
+17 lineinfile: This is also similar to replace
+
+18 docker_container: Used to manage docker containers on the managed nodes
+
+19 docker_image: USed to manage docker images
+
+20 docker_login: Used to login into docker registr
+
+21 file: Used to create delete files/directories
+
+22 k8s: Used to manage Kubernetes services
+
+========================================================================
+Ansible perfrom remote configuration in 3 ways
+1 Adhoc commands
+2 Playbooks
+3 Roles
+
+Adhoc commands
+====================
+Syntax of Adhoc commands
+--------------------------------------
+ansible all/ipaddress/group_name  -i path_of_inventory -m module_name 
+                                                            -a '          ' 
+
+
+Command Module
+==================
+Ansible command to see the memory information of all managed nodes
+ansible all -i /etc/ansible/hosts -m command -a 'free m'
+
+/etc/ansible/hosts is the default inventory file and when using it
+we need not give -i
+ansible all  -m command -a 'free m'
+
+command module is the default module os ansible and we need not  use
+-m option when working on command module
+ansible all   -a 'free m'
+
+====================================================================
+Shell Module
+-----------------
+Ansible commands to downlaod the docker script and execute it to install docker
+ansible all -m shell -a ' curl -fsSL https://get.docker.com -o get-docker.sh'
+
+ansible all -m shell -a 'sh get-docker.sh'
+
+--------------------------------------------------------------------------
+Ansible command to capture memory statics into a file called as file1
+ansible all -m shell -a 'free -m > file1'
+
+=====================================================================
+User Module
+=================
+Ansible command to create a user and assign a password
+ansible all -m user -a 'name=sai password=levelup' -b
+
+Ansible command to create a user,assign home dir,default shell
+uid,comment etc
+ ansible all -m user -a 'name=Anu password=levelup 
+          home=/home/ubuntu/Anu uid=12345 shell=/bin/bash 
+                                     comment="A normal user"' -b
+
+-------------------------------------------------------------------
+Ansible command to create file on all managed nodes
+ansible all -m file -a 'name=/tmp/file1 state=touch'
+
+state=touch    create files
+state=directory creates directories
+state=absent    delete files/directories
+
+
+
+
+===========================================================================
+Ansible command to create file and also specify the owner,group owner
+and permissions
+ansible all -m file -a 'name=/tmp/file1 state=touch owner=Anu
+                                                group=Anu mode=750' -b
+
+
+===========================================================================
+Ansible command to copy /etc/passwd file to all managed nodes
+ ansible all -m copy -a 'src=/etc/passwd dest=/tmp'
+
+Create a chain of directories on the controller and copy all that to
+the managed nodes
+mkdir -p d1/d2/d3/d4/d5
+ansible all -m copy -a 'src=d1 dest=/home/ubuntu'
+
+Copy module can also change the permissions,ownership and group ownership
+of files that are copied
+ansible all -m copy -a 'src=file1 dest=/tmp owner=root 
+                                                  group=anu mode=700' -b
+										
+===========================================================================										
