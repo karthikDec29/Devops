@@ -1,0 +1,150 @@
+Docker Compose
+=====================
+This is used for creating a multi container architecture which is reusable
+Docker compose uses yml files 
+
+Install docker-compose
+============================
+1 Open https://docs.docker.com/compose/install/
+2 Click on Linux tab
+3 Copy and paste the commands
+
+4 To check the version of docker compose
+  docker-compose --version
+
+
+==============================================================================
+Docker Compose
+=====================
+This is used for creating a multi container architecture which is reusable
+Docker compose uses yml files 
+
+Install docker-compose
+============================
+1 Open https://docs.docker.com/compose/install/
+2 Click on Linux tab
+3 Copy and paste the commands
+
+4 To check the version of docker compose
+  docker-compose --version
+
+==========================================================================
+UseCase
+Create a docker compose file to setup a mysql container linked with 
+a database container
+
+vim docker-compose.yml
+
+---
+version: '3.8'
+
+services:
+ mydb:
+  image: mysql:5
+  environment:
+   MYSQL_ROOT_PASSWORD: password
+
+ mywordpress:
+  image: wordpress
+  image: 
+  ports:
+   - "8888:80"
+  links:
+   - mydb:mysql
+...
+
+To setup the containers from the above file
+docker-compose up -d
+
+To stop the containers
+docker-compose stop
+
+To stop and delete the containers
+docker-compose down
+
+===================================================================
+UseCase
+Create a docker compose file to setup start postgres and link with adminer
+application
+ vim docker-compose.yml
+---
+version: '3.8'
+
+services:
+ db:
+  image: postgres
+  environment:
+   POSTGRES_PASSWORD: password
+   POSTGRES_USER: myuser
+   POSTGRES_DB: mydb
+
+ adminer:
+  image: adminer
+  ports:
+   - 8888:8080
+...
+==================================================================
+UseCase
+Create a docker compose file to setup ci-cd environment
+where a jenkins is linked with 2 tomcat containers
+
+vim docker-compose.yml
+version: '3.8'
+
+services:
+ myjenkins:
+  image: jenkins/jenkins
+  ports:
+  - 5050:8080
+  container_name: myjenkins
+
+ qaserver:
+  image: tomcat
+  ports:
+   - 6060:8080
+  links:
+   - myjenkins:jenkins
+  container_name: qaserver
+
+ prodserver:
+  image: tomcat
+  ports:
+   - 7070:8080
+  links:
+   - myjenkins:jenkins
+  container_name: prodserver
+...
+
+===========================================================================
+UseCase
+================
+Create a docker compsoe file to setup the LAMP architecture
+---
+version: '3.8'
+
+services:
+ mydb:
+  image: mysql
+  environment:
+   MYSQL_ROOT_PASSWORD: password
+  container_name: mydb
+
+ apache:
+  image: httpd
+  ports:
+   - 9090:80
+  container_name: apache
+  links:
+   - mydb:mysql
+
+ php:
+  image: php:7.2-apache
+  links:
+   - mydb:mysql
+   - apache:httpd
+  container_name: php
+...
+
+
+==============================================================================
+========================================================================

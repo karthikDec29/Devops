@@ -1,0 +1,179 @@
+UseCase
+==============
+Create a dockerfile from ubuntu base image and install 
+git in it
+
+1 Create dockerfile
+  vim dockerfile
+  FROM ubuntu
+  MAINTAINER levelup
+  RUN apt-get update
+  RUN apt-get install -y git
+
+2 Create an image from the above file
+  docker build -t myubuntu .
+
+3 Check if the new image is created
+  docker images
+
+4 Create a container from the new image and it should have git installed
+  docker run  --name u1 -it myubuntu
+  git --version
+
+=========================================================
+Cache Busting
+===================
+When we create an image from a dockerfile docker stores all the 
+executed isntructions in a its cache.Next time if we edit the
+same docker file and add few new instructions and build an image
+out of it docker will not execute the previously executed statements
+Instead it will read them from the cache
+This is a time saving mechanism
+The disadvantage is if the docker file is edited with a huge time
+gap then we might end up installing s/w's that are outdated
+
+Eg: 
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install -y git
+
+If we build an image from the above dockerfile docker saves all 
+these instructions in the dockercache and if we add the below
+statement
+RUN apt-get install -y tree
+only this latest statement will be excuted
+
+To avoid this problem and make docker execute all the instructions 
+once more time without reading from cache we use "cache busting"
+docker build --no-cache -t myubuntu .
+
+=================================================================
+
+================================================================
+Create a shell script to install multiple s/w's and copy this
+into the docker image  and execute it a the the time os creating the image
+
+1 Create the shell script
+  vim script.sh
+  apt-get update
+  for x in tree git
+  do
+      apt-get install -y $x
+  done
+
+2 Give excute permissions on that file
+  chmod u+x script.sh 
+
+3 Create the dockerfile
+  vim dockerfile
+  FROM ubuntu
+  MAINTIANER intelliqit
+  COPY ./script.sh /
+  RUN ./script.sh
+
+4 Create an image from the dockerfile
+  docker build -t myubuntu .
+
+5 Create a container from the above image
+  docker run  --name u1 -it myubuntu
+
+6 Check if the script.sh is present in / and also see if tree and git are installed
+  ls  /
+  git --version
+  tree
+============================================================================
+
+Create a dockerfile from ubuntu base image and make
+/data as the default volume
+
+1 Create a dockerfile
+  vim dockerfile
+  FROM ubuntu
+  MAINTAINER levelup
+  VOLUME /data
+
+2 Create an image from the above dockerfile
+  docker build -t myubuntu .
+
+3 Create a container from the above image and check for the volume
+  docker run  --name u1 -it myubuntu
+  ls (we should see the data folder)
+
+4 Go into the data folder and create some files
+  cd data
+  touch file1 file2
+  exit
+
+5 Check for the mount section and copy the source path
+
+6 Delete the container
+  docker rm -f u1
+
+7 Check if the files are still present
+  cd "source path"
+
+======================================================================
+Create a dcoker file from nginx base image and expose 80 port 
+
+1 vim dockerfile
+  FROM nginx
+  MAINTAINER password
+  EXPOSE 90
+
+2 Create an image
+  docker build -t mynginx .
+
+3 Create a container from above image
+  docker run --name n1 -d -P mynginx 
+
+4 Check for the ports exposed
+  docker port n1
+
+=================================================================
+Create a dockerfile from ubunt base image and downlaod jenkins.war
+into it
+
+1 Create a dockerfile
+  vim dockerfile
+  FROM ubuntu
+  MAINTIANER levelup
+  ADD https://get.jenkins.io/war-stable/2.263.4/jenkins.war  /
+
+2 Create an image from the above dockerfile
+  docker build -t myubuntu .
+
+4 Create a container from this image
+  docker run --name u1 -it myubuntu
+ 
+5 Check if jenkins.war is present
+  ls
+
+
+========================================================================
+
+======================================================================
+Create a dcokerfile from ubuntu base image and install
+java in it,docwnload jenkins.war and make
+"java -jar jenkins.war" as the default process of the
+container
+
+1 vim dockerfile
+  FROM ubuntu
+  MAINTAINER intelliqit
+  RUN apt-get update
+  RUN apt-get install -y openjdk-8-jdk
+  ADD https://get.jenkins.io/war-stable/2.263.4/jenkins.war /
+  ENTRYPOINT ["java","-jar","jenkins.war"]
+  
+
+2 Create an image from the above file
+  docker build -t myubuntu .
+
+3 Create a container from the above image and we will see that 
+  it behaves like a jenkins container
+  docker run  --name u1 -it myubuntu
+4 Create a container from this image
+  docker run --name u1 -it myubuntu
+ 
+5 Check if jenkins.war is present
+  ls
