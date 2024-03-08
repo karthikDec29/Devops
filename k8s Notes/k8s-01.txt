@@ -1,0 +1,46 @@
+Kubernetes
+======================
+
+Menions: This is an individual node used in kubernetes
+Combination of these minions is called as Kubernetes cluster
+
+Master is the main machine which triggers the container orchestraion
+It distributes the work load to the Slaves
+
+Slaves are the nodes that accept the work load from the master
+and handle activites load balancing,autoscalling,high availability etc
+
+
+
+Kubernetes uses various of types of Object
+
+1 Pod: This is a layer of abstraction on top of a container.This is the samallest
+  object that kubernetes can work on.In the Pod we have a container.
+  The advantage of using a Pod is that kubectl commands will work on the Pod and the 
+  Pod communicates these instructions to the container.In this way we can use the
+  same  kubectl irresepective of which technology containers are in the Pod.
+
+
+
+2 Service: This is used for port mapping and network load balancing
+
+3 NameSpace: This is used for creating partitions in the cluster.Pods running
+ in a namespace cannot communicate with other pods running in other namespace
+
+4 Secrets: This is used for passing encrypted data to the Pods
+
+5 ReplicationController: This is used for managing multiple replicas of PODs
+and also perfroming saclling 
+
+6 ReplicaSet: This is similar to replicationcontroller but it is more advanced
+where features like selector can be implemented
+
+7 Deployment: This used for perfroming all activites that a Replicaset can do
+  it can also handle rolling update
+
+8 Volume: Used to preserve the data even when the pods are deleted
+
+9 Statefulsets: These are used to handle stateful application like data bases
+  where consistency in read write operations has to be maintained.
+
+10 Ingress: This object is used for mapping ip with domain name 

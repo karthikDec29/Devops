@@ -1,0 +1,211 @@
+Kubernetes Architecture
+=============================
+Master Componentes
+=======================
+Container runtime: This can be docker or anyother container technology
+
+apiServer: Users interact with the apiServer using some clinet like ui,command line tool like kubelet.It is the apiServer which is the gateway to the cluster
+It works as a gatekeeper  for authentication and it validates if a specific
+user is having permissions to execute a specific command.Example if we want to
+deploy a pod or a deployment first apiServers validates if the user is authorised to perform that action and if so it passes to the next process
+ie the "Scheduler"
+
+Scheduler: This process accepts the instructions from apiServer after validation
+and starts an application on a sepcific node or set of nodes.It estimates
+how much amount of h/w is required for an application and then checks which
+slave have the necessary h/w resources and instructs the kubelet to deploy
+the application
+
+kubelet: This is the actual process that takes the orders from scheduler and
+deploy an application on a slave.This kubelet is present on both master and slave
+
+controller manager: This check if the desired state of the cluster is always
+maintained.If a pod dies it recreates that pod to maintain the desired state
+
+etcd: Here the cluster state is maintained in key value pairs.
+It maintains info about the slaves and the h/w resources available on
+the slaves and also the pods running on the slaves
+The scheduler and the control manager read the info from this etcd
+and schedule the pods and maintain the desired state
+
+===========================================================================
+Worker components
+======================= 
+containerrun time: Docker or some other container technology
+
+kubelet: This process interacts with container run time and the node 
+and it start a pod with a container in it
+
+kubeproxy: This will take the request from services to pod
+It has the intellegence to forward a request to
+a near by pod.Eg If an application pod wants to communicate with a db pod
+then kubeproxy will take that request to the nearby pod 
+
+===========================================================================
+UseCase
+===========
+Create nginx as a pod and name it webserver
+kubectl run --image nginx webserver
+
+To see the list of pods running
+kubectl get pods
+
+To see more info about the pods like their ip and slave where they are running
+kubectl  get pods -o wide
+
+To delete the pod
+kubectl delete pods webserver
+
+============================================================================
+UseCase
+========= 
+Create mysql pod and name it mydb and go into its interactive terminal and create few tables
+
+kubectl run --image mysql:5 mydb --env MYSQL_ROOT_PASSWORD=intelliqit
+
+To check the pods
+kubectl get pods
+
+To go into the interactive terminal
+kubectl exec -it mydb -- bash
+
+To login into the db
+mysql -u root -p
+Password: intellqiit
+
+Create tables here
+
+=========================================================================
+Kuberentes Defintion files
+==============================
+Objects in Kubernetes cluster are deployed using these
+defintion files 
+They are created using yml and they generally these 4 top level 
+fields.
+
+apiVersion:
+
+
+kind:
+metadata:
+spec:
+
+apiVersion : This specifies the code library that has to be imported
+to create a particualr kind of Kubernetes object
+
+kind: Here we specify the type kubernetes object that we want to 
+create(Pod,ReplicaSet,Deployment,Service etc)
+
+metadata: Here we can give additional info about the Pod like
+the name of the Pod,some labels etc
+
+spec: This is where exact info about the object that is created is
+specified like containers info port mapping,no of replicas etc
+
+================================================================
+kind                     apiVersions
+===================================================
+Pod			 v1
+Service			 v1
+Secret			 v1
+Namespace		 v1
+ReplicationController    v1
+Volume		         v1
+ReplicaSet  		 apps/v1
+Deployment	         apps/v1
+StatefuleSet             apps/v1
+
+
+==================================================================
+Create a pod defintion file to start nginx pod with a name webserver
+
+1 vim pod-defintion1.yml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx-pod
+ labels:
+  type: proxy
+  author: levelup
+spec:
+ containers:
+  - name: webserver
+    image: nginx
+   
+...
+
+2 Create pod from the above file
+  kubectl apply -f pod-defintion1.yml
+
+3 To check the list of pods
+  kubectl get pods
+
+4 To delete the pods
+  kubectl delete -f pod-defintion1.yml
+
+========================================================================
+UseCase
+================
+Create a postgres-pod and give the labels as author=intelliqit
+and type=db,also pass the necessay environment variables
+
+1 vim pod-definition2.yml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: postgres-pod
+ labels:
+  author: levelup
+  type: db
+spec:
+ containers:
+  - name: mydb
+    image: postgres
+    env:
+     - name: POSTGRES_PASSWORD
+       value: levelup
+     - name: POSTGRES_USER
+       value: myuser
+     - name: POSTGRES_DB
+       value: mydb
+...
+
+To create pods from the above file
+kubectl apply -f pod-defintion2.yml
+
+
+====================================================================
+UseCase
+============
+Create a jenkins-pod and also perfrom necessary port mapping
+
+vim pod-definition2.yml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: jenkins-pod
+ labels:
+  type: ci-cd
+  author: levelup
+spec:
+ containers:
+  - name: jenkins
+    image: jenkins/jenkins
+    ports:
+     - containerPort: 8080
+       hostPort: 8080
+...
+
+To create the pods from the above file
+kubectl apply -f pod-defintion3.yml
+
+To check if the jnekins pod is running
+kubectl get pods -o wide
+
+To accesss jenkins from browser
+kubectl get nodes -o wide
+Capture the external ip of the node where jenkins pod is running
+in browser
+externalip:8080

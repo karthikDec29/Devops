@@ -1,0 +1,290 @@
+=======================================================================
+Kubernetes Project
+========================
+This is a python based application which is used for accepting a vote
+(voting app).This application accepts the vote and passes it to a
+temporary db created using redis.From here the data is passed to a
+worker application created using .net which anlysises the data and
+stores them permananatly in a database created using postgres
+From here the results can be seen on an application that is created 
+using nodejs and this is called as resulta-app
+
+To do this we will create 5 pod definition files
+and 4 service files,2 services of type cluster ip for redis and postgres 
+databases 2 services of type loadbalancer for python voting app and 
+nodejs result app
+
+Pod Definition Files
+================================
+vim voting-app-pod.yml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voting-app-pod
+  labels:
+    name: voting-app-pod
+    author: levelup
+spec:
+  containers:
+    - name: voting-app
+      image: dockersamples/examplevotingapp_vote
+      ports:
+        - containerPort: 80
+...
+
+
+vim result-app-pod.yml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: result-app-pod
+  labels:
+    name: result-app-pod
+    author: levelup
+spec:
+  containers:
+    - name: result-app
+      image: dockersamples/examplevotingapp_result
+      ports:
+        - containerPort: 80
+...
+
+
+vim worker-app-pod.yml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: worker-app-pod
+  labels:
+    name: worker-app-pod
+    author: levelup
+spec:
+  containers:
+    - name: worker-app
+      image: dockersamples/examplevotingapp_worker
+...
+
+
+vim redis-pod.yml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-pod
+  labels:
+    name: redis-pod
+    author: levelup
+spec:
+  containers:
+   - name: redis
+     image: redis
+     ports:
+       - containerPort: 6379
+...
+
+vim postgres-pod.yml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres-pod
+  labels:
+    name: postgres-pod
+    author: levelup
+spec:
+  containers:
+    - name: postgres
+      image: postgres
+      ports:
+        - containerPort: 5432
+...
+
+
+============================================================================
+Service Defintion file
+===============================
+vim redis-service.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  labels:
+    name: redis-service
+    author: levelup
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    name: redis-pod
+    app: demo-voting-app
+...
+
+vim pod-service.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels:
+    name: postgres-service
+    author: levelup
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    name: postgres-pod
+    app: demo-voting-app
+...
+
+Note: Since "type" is not specified in the "spec" section they  will
+be created as clusterIP
+
+
+
+
+vim voting-app-service.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: voting-app-service
+  labels:
+    name: voting-app-service
+    author: levelup
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    name: voting-app-pod
+    app: demo-voting-app
+...
+
+vim result-app-service.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: result-app-service
+  labels:
+    name: result-app-service
+    author: levelup
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    name: result-app-pod
+    app: demo-voting-app
+...
+
+
+The above 2 service objects are created as LoadBalancer type ie
+they can perfrom network load balancing where we can access the pod
+from any node and also a single public ip will be assigned for all
+the nodes
+
+================================================================================
+Secrets
+============
+This is used to send encrypted data to the definiton files
+Generally passwords for Databases can be encrypted using this
+
+Create a secret file to store the mysql password
+vim secret.yml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+ name: mysql-pass
+type: Opaque
+stringData:
+ password: levelup
+ username: sai
+...
+
+To deploy the secret
+kubectl create -f secret.yml
+
+Create a pod defintion file to start a mysql pod and pass the environment
+varible using the above secret
+vim pod-defitintion5.yml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: mysql-pod
+ labels:
+  author: levelup
+  type: db
+spec:
+ containers:
+  - name: mydb
+    image: mysql:5
+    env:
+     - name: MYSQL_ROOT_PASSWORD
+       valueFrom:
+        secretKeyRef:
+         name: mysql-pass
+         key: password
+...
+
+To create pods from above file
+kubect create -f pod-defintion5.yml
+
+
+============================================================================
+==============================================================================
+Create secrets for postgres password
+vim secret2.yml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+ name: postgres-secrets
+type: Opaque
+stringData:
+ password: levelup
+ user: myuser
+ db: mydb 
+
+To create a secret from the above file
+kubectl create -f secret2.yml
+
+Create a pod defitnition file that start starts postgres db using the above secrets
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: postgres-pod
+ labels:
+  author: levelup
+  type: database
+spec:
+ containers:
+  - name: mydb
+    image: postgres
+    env:
+     - name: POSTGRES_PASSWORD
+       valueFrom:
+        secretKeyRef:
+         name: postgres-secrets
+         key: password
+     - name: POSTGRES_USER
+       valueFrom:
+        secretKeyRef:
+         name: postgres-secrets
+         key: 
+     - name: POSTGRES_DB
+       value: mydb

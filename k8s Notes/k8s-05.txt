@@ -1,0 +1,151 @@
+Deployment
+================
+
+This is also a high level Kubernetes object which can be used for
+scalling and load balancing and it can also perfrom rolling update
+
+Create a deployment file to run nginx:1.7.9 with 3 replicas
+
+
+vim deployment1.yml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: nginx-deployment
+ labels:
+  author: levelup
+  type: proxyserver
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   type: proxyserver
+ template:
+  metadata:
+   name: nginx-pod
+   labels:
+    type: proxyserver
+  spec:
+   containers:
+    - name: nginx
+      image: nginx:1.7.9
+      ports:
+       - containerPort: 80
+         hostPort: 8888
+ 
+To create the deployment from the above file
+kubectl create -f deployment.yml
+
+To check if the deployment is running
+kubectl get deployment
+
+To see if all 3 pod of nginx are running
+kubectl get pod
+
+Check the version of nginx
+kubectl describe pods nginx-deployment | less
+
+==========================================================================
+Namespace in kubernetes
+==========================
+Namespaces are used to create partitions in the Kubernetes cluster
+Pods runnign in different namespaces cannot communicate with
+each other
+
+To create Namespaces
+===========
+vim namespace.yml
+---
+apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: test-ns
+...
+
+kubectl apply -f namespace.yaml 
+
+To see the list of namespace
+================================
+kubectl get namespace
+
+Create a pod on that namespace
+===================================
+vim pod-definition4.yml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: jdk-pod
+ namespace: test-ns
+ labels:
+  author: levelup
+spec:
+ containers:
+  - name: java
+    image: openjdk:12
+...
+
+To see list of pods in a namespace
+======================================
+kubectl get pods -n test-ns
+
+To delete a namespace
+===========================
+kubectl delete namespace test-ns
+
+
+
+============================================================================
+Volumes
+==================
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: redis-pod
+ labels:
+  author: levelup
+spec:
+ containers:
+  - name: redis
+    image: redis
+    volumeMounts:
+     - name: redis-volume
+       mountPath: /data/redis
+ volumes:
+  - name: redis-volume
+    emptyDir: {}
+
+Create a pod from the above file
+kubectl create -f volumes.yml
+
+To check if the volume is mounted
+kubectl exec -it redis-pod -- bash
+
+Go to the redis folder and create some files
+cd redis
+cat > file
+Store some data in this file
+
+To kill the redis pod install procps
+apt-get update
+apt-get install -y procps
+
+Identify the process id of redis
+ps aux
+kill 1
+
+Check if the redis-pod is recreated
+kubectl get pods
+We will see the restart count changes for this pod
+
+If we go into this pods interactive terminal
+kubectl exec -it redis-pod -- bash
+
+We will see the data but not the s/w's (procps) we installed
+cd redis
+ls
+
+ps  This will not work
