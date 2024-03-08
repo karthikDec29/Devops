@@ -1,0 +1,99 @@
+To download the code from github we can use 3 methods
+1 git clone
+2 git fetch
+3 git pull
+
+
+======================================================================
+
+Git Clone
+=================
+This is one time activity.Initially a team members creates the code
+structure and uploads it into github.All the team members want the same
+code so they will download it using git clone
+
+Syntax
+git clone remote_github_url
+
+================================================================
+Git fetch
+===================
+This will work only when the data present on the remote
+github is different from the data present on the local
+repository.Git fetch will download only the modified files
+and place them on a seperate branch called as "remote branch"
+We can go to this remote branch and check the code changes
+If the code is ok then we can merge with main branch
+
+1 Open github.com
+2 Go to the repository that we uploaded
+3 Select a file and edit it
+4 Click on commit changes
+5 On git bash
+  git fetch
+  This will create a remote branch locally and place the modified file on it
+6 To see the list of branches
+  git branch -a
+7 Move into the remote branch and check the code changes
+  git checkout remotes/origin/main
+8 If code changes are ok merge with master
+  git checkout master
+  git merge remotes/origin/main
+
+=========================================================================
+git pull
+==============
+1 Open github.com
+2 Go to the repository that we uploaded
+3 Select a file and edit it
+4 Click on commit changes
+5 On git bash
+  git pull
+  This will download the modified files and place them directly
+  on main branch
+
+===========================================================================
+Git Merge
+===============
+Merging always happens bases on the time stamps of the commits
+
+1 Create few commits on master
+  touch f1
+  git add .
+  git commit -m "a"
+  touch f2
+  git add .
+  git commit -m "b"
+
+2 Check the git commit history
+  git log --oneline
+
+3 Create a test branch and create few commits on it
+  git checkout -b test
+  touch f3
+  git add .
+  git commit -m "c"
+  touch f4
+  git add .
+  git commit -m "d"
+
+4 Check the commit history
+  git log --oneline
+
+5 Go back to master and create few more commits
+  git checkout master
+  touch f5
+  git add .
+  git commit -m "e"
+  touch f6
+  git add .
+  git commit -m "f"
+
+6 Check the commit history
+  git log --oneline
+
+9 Merge test with master
+  git merge test
+
+10 Check the commit history
+   git log --oneline

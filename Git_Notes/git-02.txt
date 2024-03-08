@@ -1,0 +1,57 @@
+Branches in Git
+=====================
+This is a feature of git using which we can create code
+related to different functionalities on various branches
+and then merge with the master/main branch
+This helps in creating the code in an uncluttered
+and organised way
+
+1 To see the the list of local branches
+  git branch
+
+2 To see the list of all branches(local and remote)
+  git branch -a
+
+3 To create branch
+  git branch branch_name
+
+4 To move into a branch
+  git checkout branch_name
+
+5 To create a branch and also move into it
+  git checkout -b branch_name
+
+6 To merge a branch
+  git merge branch_name
+
+7 To delete a branch that is merged
+  git branch -d branch_name
+  This is also called as soft delete
+
+8 To delete a branch that is not merged
+  git branch -D branch_name
+  This is called as Hard delete
+
+===================================================================
+Whenever a branch is created what ever is the commit
+history of the parent branch wil be copied into the
+new branch
+
+Irrespective of where a file is created or modified git
+only considers the branch from where the commit operation
+is performed 
+
+=======================================================================
+Working on github
+=========================
+1 Signup for a github account
+2 Login into that account
+3 Click on + on top right corner
+4 Click on New repository
+5 Enter some repository name
+6 Select Public or Private
+7 Click on Create repository
+8 Go to "push an existing repository from command line"
+  Copy paste all the three commands displayed in git bash
+  Enter username and password of github
+  This process is called checking
