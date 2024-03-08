@@ -1,0 +1,107 @@
+Ansible command to copy /etc/passwd file to all managed nodes
+ ansible all -m copy -a 'src=/etc/passwd dest=/tmp'
+
+Create a chain of directories on the controller and copy all that to
+the managed nodes
+mkdir -p d1/d2/d3/d4/d5
+ansible all -m copy -a 'src=d1 dest=/home/ubuntu'
+
+Copy module can also change the permissions,ownership and group ownership
+of files that are copied
+ansible all -m copy -a 'src=file1 dest=/tmp owner=root 
+                                                  group=sai mode=700' -b
+
+=========================================================================
+Ansible command to install git on all managed nodes
+ansible all -m apt -a 'name=git state=present' -b
+
+state=present is for installation
+state=absent is for uninstallation
+state=latest  is for upgrading to a later version
+
+To update the apt repository we can use
+update_cache-yes
+Ansible command to install tomcat9 after updating the apt repository
+ansible all -m apt -a 'name=tomcat9 state=present update_cache=yes' -b
+
+========================================================================
+Service module
+===================
+Ansible command to restart tomcat on all managed nodes
+ ansible all -m service -a 'name=tomcat9 state=restarted' -b
+
+state=restarted is for restarting
+state=stopped is for stopping
+state=started is for starting 
+
+========================================================================
+Fetch Module
+=====================
+Ansible command to copy /etc/group file from all managed nodes to controller
+ ansible all -m fetch -a 'src=/etc/group dest=/tmp'
+
+==========================================================================
+Git Module
+================
+Ansible command to clone a remote git repository into all managed nodes
+ansible all -m git -a 'repo=https://github.com/AnupamaSoma/maven-project.git                                                      dest=/tmp/git'
+
+=========================================================================
+Replace Module
+==================
+Ansible command to change port of tomcat from 8080 to 9090
+ansible all -m replace -a 'regexp=8080 replace=9090 
+                                     path=/etc/tomcat9/server.xml' -b
+
+ansible all -m service -a 'name=tomcat9 state=restarted' -b
+
+=========================================================================
+Uri Module
+===================
+Ansible comamand to check if google is reachbale from all managed nodes
+ ansible all -m uri -a 'url=http://google.com status_code=200'
+
+status_code=200 is success
+status_code=-1 is failure
+
+========================================================================
+get_url
+==============
+Ansible command to download jenkins.war into all managed nodes
+ ansible all -m get_url -a 
+       'url=https://get.jenkins.io/warstable/2.277.2/jenkins.war  dest=/tmp'
+
+============================================================================
+Configuring apache2
+========================
+1 Install apache2 on all managed nodes
+  ansible all -m apt -a 'name=apache2 state=present' -b
+
+2 Edit the index.html file
+  ansible all -m copy -a 'content="Welcome"                                                             dest=/var/www/html/index.html' -b
+
+3 Restart apache2
+  ansible all -m service -a 'name=apache2 state=restarted' -b
+
+4 Check the url response of apache2
+  ansible all -m uri -a 'url=http://172.31.28.60 status_code=200'
+  ansible all -m uri -a 'url=http://172.31.23.20 status_code=200'
+
+=======================================================================
+Configuring tomcat9
+==========================
+1 Install tomcat9
+  ansible all -m apt -a 'name=tomcat9 state=present update_cache=yes' -b
+
+2 Copy the tomcat-users.xml file
+  ansible all -m copy -a 'src=tomcat-users.xml dest=/etc/tomcat9' -b
+
+3 Change port of tomcat
+  ansible all -m replace -a 'regexp=9090 replace=8080 
+                                     path=/etc/tomcat9/server.xml' -b
+
+4 Restart tomcat
+  ansible all -m service -a 'name=tomcat9 state=restarted' -b 
+
+5 Check the url reponse of tomcat
+  ansible all -m uri -a 'url=http://172.31.28.60:8080 status_code

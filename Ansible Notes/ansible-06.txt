@@ -1,0 +1,141 @@
+Handlers
+================
+1 Handlers are modules that are executed if some other module 
+  is executed successfully and it has made some changes
+
+2 Handlers are executed only after all the tasks are executed
+
+3 Handlers are executed in the order that they are mentioned 
+  in the handlers section and not in the order that they are
+  called in the tasks section
+
+4 Even if a handler is called multiple times in the task section
+  it will be executed only once
+
+vim playbook17.yml
+---
+- name: Implementing Handlers
+  hosts: all
+  tasks:
+   - name: Install apache2
+     apt:
+      name: apache2
+      state: present
+     notify: Check url response
+   - name: Edit the index.html file
+     copy:
+      content: "IntelliQIT Home Page"
+      dest: /var/www/html/index.html
+     notify: Restart apache2
+  handlers:
+   - name: Restart apache2
+     service:
+      name: apache2
+      state: restarted
+   - name: Check url response
+     uri:
+      url: "{{item}}"
+      status_code: 200
+     with_items:
+      - http://172.31.95.178
+      - http://172.31.88.236
+...
+
+=================================================================
+Error Handling or Exception Handling
+========================================
+If we want the ansbile playbook to continue its execution
+even if a specific module fails then we can use Error Handling
+
+The section of code that might fail is given in the "block" section
+If it fails the control goes to the "rescue" section,"always"
+section is executed everytime
+
+vim playbook18.yml
+---
+- name: Setup of tomcat
+  hosts: all
+  tasks:
+   - block:
+      - name: Install tomcat8
+        apt:
+         name: tomcat8
+         state: present
+     rescue:
+      - name: Install tomcat9
+        apt:
+         name: tomcat9
+         state: present
+     always:
+      - name: Display tomcat success msg
+        debug:
+         msg: "Tomcat setup is successfull"
+...
+
+
+=================================================================
+Ansible playbook to install git using apt on ubuntu based machines
+and yum on centos based machines
+
+vim playbook15.yml
+---
+- name: Install using apt or yum
+  hosts: all
+  tasks:
+   - block:
+      - name: Install git using apt
+        apt:
+         name: git
+         state: present
+     rescue:
+      - name: Install git using yum
+        yum:
+         name: git
+         state: present
+...
+
+=================================================================
+Ansible playbook for setting up Jenkins on one server and 
+tomcat on qa and prodservers
+
+vim playbook.yml
+---
+- name: Install required s/w for Jenkins
+  hosts: jenkins
+  tasks:
+   - name: Install required s/w
+     apt:
+      name: "{{item.a}}"
+      state: present
+      update_cache: "{{item.b}}"
+     with_items:
+      - {a: openjdk-8-jdk,b: yes}
+      - {a: git,b: no}
+      - {a: maven,b: no}
+   - name: Download jenkins.war
+     get_url:
+      url: https://get.jenkins.io/war-stable/2.277.2/jenkins.war
+      dest: /home/ubuntu
+- name: Install tomcat and tomcat-admin
+  hosts: servers
+  tasks:
+   - name: Install tomcat9 and tomcat9-admin
+     apt:
+      name: "{{item.a}}"
+      state: present
+      update_cache: "{{item.b}}"
+     with_items:
+      - {a: tomcat9,b: yes}
+      - {a: tomcat9-admin,b: no}
+   - name: Copy the tomcat-users.xml file
+     copy:
+      src: tomcat-users.xml
+      dest: /etc/tomcat9
+     notify: Restart tomcat9
+  handlers:
+   - name: Restart tomcat9
+     service:
+      name: tomcat9
+      state: restarted
+...
+

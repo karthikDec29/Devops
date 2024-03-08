@@ -1,0 +1,221 @@
+Host Scope variables
+============================
+These variables are classified into 2 type
+1 Variables to work on a group of hosts
+2 Variables to work on a single host
+
+Variables to work on a group of hosts
+=============================================
+These variables are created ina folder called group_vars
+This folder should be created in the location where the playbooks
+are present and in the group_vars we create a file whose name is
+same as group name from inventory file
+
+1 Move into the folder where the playbooks are present
+  cd path_of_playbooks_folder
+
+2 Create a folder group_vars and move into it
+  mkdir group_vars
+  cd group_vars
+
+3 Create a file whose name is same as some group name in inventory file
+  vim webserver
+  ---
+  a: firewalld
+  b: present
+  c: yes
+  ...
+
+4 Move back to the playbooks folder
+  cd ..
+
+5 Create a playbook  to use the above varibales
+  vim playbook8.yml
+---
+- name: Install firewall using host scope variables
+  hosts: webserver
+  tasks:
+   - name: Install firewalld
+     apt:
+      name: "{{a}}"
+      state: "{{b}}"
+      update_cache: "{{c}}"
+ 
+6 To execute the playbook
+  ansible-playbook playbook8.yml -b
+
+===============================================================
+Variable to work on a single host
+======================================
+These variables are created in host_vars folder and this folder
+should be created in the fodler where the playbooks are present
+In this folder create a file whose name is ipaddress of one managed
+node
+
+1 Move into the playbooks folder
+  cd path_of_playbooks_folder
+
+2 Create a folder called host_vars and move into it
+  mkdir host_vars
+  cd host_vars
+
+3 Create file whose name is same as ipaddress of one managed node
+  vim 172.31.95.178 
+  ---
+  a: Radha
+  b: levelup
+  c: /home/Radha
+  d: /bin/bash
+
+4 Move back to the playbooks folder
+  cd ..
+
+5 Create aplybook to use the above varibales
+  vim playbook9.yml
+---
+- name: User create uisng hsot scope varibales
+  hosts: 172.31.95.178
+  tasks:
+   - name: USer creation
+     user:
+      name: "{{a}}"
+      password: "{{b}}"
+      home: "{{c}}"
+      shell: "{{d}}"
+...
+
+6 To execute the playbook
+  ansible-playbook playbook9.yml -b
+
+
+==================================================================
+Loops in ansible
+====================
+Loops can be implemented using "with_items" and
+"with_sequence"
+
+Ansible playbook to install s/w applications
+vim playbook10.yml
+---
+- name: Install s/w applications
+  hosts: all
+  tasks:
+   - name: Install s/w
+     apt:
+      name: "{{item}}"
+      state: present
+      update_cache: no
+     with_items:
+      - tree
+      - git
+      - apache2
+...
+
+==================================================================
+The above process is depricated and the better way to write
+the above playbook would be
+vim playbook11.yml
+---
+- name: Install s/w applications
+  hosts: all
+  tasks:
+   - name: Install s/w
+     apt:
+      name: ["tree","git","apache2"]
+      state: present
+      update_cache: no
+...
+
+========================================================================
+Ansible playbook to install/uninstall/upgrade s/w applications
+vim playbook12.yml
+---
+- name: Install s/w applications
+  hosts: all
+  tasks:
+   - name: Install s/w
+     apt:
+      name: "{{item.a}}"
+      state: "{{item.b}}"
+      update_cache: "{{item.c}}"
+     with_items:
+      - {a: tree,b: present,c: no}
+      - {a: git,b: absent,c: no}
+      - {a: apache2,b: latest,c: yes}
+...
+
+
+=======================================================================
+Tags in Ansible
+=======================
+Tags are used to get more modular control on the execution
+of the playbooks
+
+vim playbook14.yml
+---
+- name: Implementing tags
+  hosts: all
+  tasks:
+   - name: Install tree
+     apt:
+      name: tree
+      state: present
+     tags: tree_installation
+   - name: Create user
+     user:
+      name: Ravi
+      password: levelup
+     tags: user_creation
+   - name: Copy /etc/passwd file
+     copy:
+      src: /etc/passwd
+      dest: /tmp
+...
+
+To execute only the the tagged modules
+ansible-playbook playbook14.yml --tags=tagged -b
+
+To execute only the untagged modules
+ansible-playbook playbook14.yml --tags=untagged -b
+
+To execute modules with a specific tag name
+ansible-playbook playbook14.yml --tags=user_creation -b
+
+===================================================================
+When conditions
+======================
+These are similar to "if" condiotions ie we want to execute
+a module when a specific condition is true
+
+---
+- name: Implementing when conditions
+  hosts: all
+  vars:
+   - a: 10
+  tasks:
+   - name: Download from git
+     git:
+      repo: git-url
+      dest: /tmp/git
+     when: a == 10 
+...
+
+
+=======================================================================
+---
+- name: Check if file f1 is present if not create a folder f1
+  hosts: all
+  tasks:
+   - name: check if f1 file is present
+     stat:
+      path: /tmp/f1
+     register: a
+   - name: Display output of the above module
+     debug:
+      var: a
+   - name: Create dir f1 if file f1 is not present
+     file:
+      name: /tmp/f1
+      state: directory
+     when: a.stat.exists == false
+...
