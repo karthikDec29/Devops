@@ -1,0 +1,91 @@
+git diff
+------------
+this is used for finding the difference between 2 commits
+or it can be used for finding the difference between
+a commit and a file yet to be commited
+
+
+1 To find diff between 2 commits
+  git diff commit1_id commit2_id
+
+2 To find diff between latest commit and a file
+  git diff HEAD filename
+
+==================================================
+Continuious Integration
+=============================
+Stage 1 (Continuous Downlaod)
+==============================
+Developers create some code and upload it into some version
+controlling system like Git.Jenkins should immediately download
+that code and this is called continuous download
+
+Stage 2 Continuous Build
+=============================
+The code downloaded in the previous stage has to coverted into a
+setup file commonly know as artifact.This artifcat can be in the format
+of jar,war,ear file etc.To trigger this build process jenkins uses 
+build tools like Maven,Grade,Msbuild etc.This stage is called continuous
+build
+
+Stage 3 (Continuous Deployment)
+==================================
+The artifact in the previous stage has to deployed into the testing
+environment.This testing servers might be running on some application
+servers like tomcat,Weblogic etc.Once it is deployed here it become
+available to the testers.This is called continuous deployment
+
+Stage 4 (Continuous Testing)
+================================
+Testers create automation test scripts uisng tools like Seleniumm,Codedui
+etc.Jenkins now executes these automation testin scripts and check if the 
+application is working correctly or no.If it not working jenkins will send
+email notifications to the corresponding team members.Develeopers will
+fix the defects and upload the modifed code into git,Jenkins will again
+start from stage 1
+
+Stage 5 (Continuous delivery)
+=============================
+If testing passes jenkins will deploy tha artifact into the production
+servers form where the end user or client can start accessing it
+This is called continuous delivery
+
+Stage1-4 are called as CI (Continuous Integration)
+Stage 5 is called as CD (Continuous Delivery)
+====================================================================
+
+====================================================================
+JenkinServer
+=================
+1 JDK
+2 Git,Maven
+3 Jenkins
+
+1 Update the apt reposiotry and install java
+  sudo apt-get update
+
+  sudo apt-get install -y openjdk-8-jdk
+
+2 Add the jenkins repository key to the apt repository
+  wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key 
+                                                     | sudo apt-key add -
+
+3 Add the debain repository address to jenkins.list file
+  sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > 
+                                     /etc/apt/sources.list.d/jenkins.list'
+
+4 Update the apt repository
+  sudo apt-get update
+
+5 Install jenkins
+  sudo apt-get install -y jenkins
+6 To access jenkins from browser
+  public_ip_of_jenkinsserver:8080
+
+7 Unlock jenkins by entering the first admin password
+
+8 Click on Install suggested plugins
+
+9 Create first admin user
+
+10 Click on Continue--->Finish

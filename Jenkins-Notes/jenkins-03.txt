@@ -1,0 +1,190 @@
+Pipeline as Code
+===========================
+This is the process of implementing all stages of CI-CD from the level
+of a Groovy script file called as "Jenkinsfile".
+
+Advantages
+=================
+1 Since all the stages of CI-Cd are controlled from the level of
+a program which is uploaded into git, it give all the team members the
+ability to review and modify the code and still we can maintain
+multiple versions and toggle between those versions
+
+2 Pipeline scripts can withstand planned and unplanned restarts of the
+Jenkins master
+
+3 Pipeline scripts can do all the stages of CI-CD with minumum number of
+plugins so their performance is faster
+
+4 We can handle complex real time scenarios like failure conditions
+if conditions,loop etc
+
+========================================================================
+Pipeline as Code can be implemented in 2 ways
+1 Scripted Pipeline
+2 Declarative Pipeline
+
+Scripted Pipeline Syntax
+==============================
+node('master/slave')
+{
+   stage('Stage name ins CI-CD')
+   {
+      Actual groovy code to implement this stage
+   }
+}
+
+Declarative Pipeline
+================================
+pipeline
+{
+  agent any
+  stages
+  {
+    stage('Stage in CI-CD')
+    {
+      steps
+      {
+        Actual groovy code to implement this stage
+      }
+    }
+  }
+}
+
+=======================================================================
+Scripted Pipeline
+======================
+1 Open the dashboard of Jenkins
+2 Click on New item--->Enter some item name (ScriptedPipeline)
+3 Select Pipeline job--->Ok
+4 Go to the Pipeline Section
+5 Create the below code
+
+
+
+node {
+    stage('Continous Download') {
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/AnupamaSoma/maven-project.git']]])
+}
+stage('Continous Build') {
+    sh 'mvn package'
+}
+stage('Continous Deployment'){
+    deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://172.31.31.62:8080')], contextPath: 'qaapp', war: '**\\*.war'
+}
+stage('Continous Testing')
+{
+    git 'https://github.com/AnupamaSoma/FunctionalTesting.git'
+    sh 'java -jar /var/lib/jenkins/workspace/scripted_pipeline/testing.jar'
+}
+stage('Continous DElivery'){
+    deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://172.31.17.232:8080')], contextPath: 'prodapp', war: '**\\*.war'
+}
+stage('Email Notifiacation')
+{
+    emailext body: 'Jenkins build was successfull', subject: 'Jenkins Build', to: 'priyanjali.soma@gmail.com'
+}
+
+}
+===================================================================\
+
+=========================================================================
+
+1 Clone the remote maven code
+  git clone https://github.com/AnupamaSoma/maven-project.git
+
+2 Go into the maven folder and delete the .git folder
+  cd maven
+  rm -rf .git
+
+3 Initilise a new git repo,send it to stagging and local repository
+  git init
+  git add .
+  git commit -m "a"
+
+4 Push this repository to git hub
+  Open github
+  Create a new reposiotry here
+  Push the ocde from local repository to remote repostory
+
+6 Locally create a file called Jenkinsfile and copy paste the groovy code
+  vim Jenkinsfile
+  Copy paste the Pipeline code here
+
+7 Stage it,send it to local repository and send it remote github
+
+==============================================================================
+JenkinsAdmin Activity
+=============================
+1 Open the dashboard of Jenkins
+2 Click on New item---->Enter some item name
+3 Select Pipeline--->OK
+4 Go to Pipleine section--->Definition--->Select Pipeline script from sCM
+5 Select Git
+6 Enter the github url where developers have uploaded the code along
+  with the Jenkins file
+7 Go to Build triggers--->Click on Build periodically
+  Schedule: * * * * *
+8 Apply---->Save
+  Now if the Developer makes any changes to the code and uploads those changes
+  to github then Jenkinsfile from the level of Github will trigger all
+  stages of ci-cd
+
+=============================================================================
+
+Declarative Pipeline
+
+=============================================================================
+pipeline{
+agent any
+parameters {
+  string defaultValue: 'Dev', name: 'Env'
+}
+
+stages{
+   stage('git checkout')
+    {
+        steps {
+     git 'https://github.com/AnupamaSoma/maven-project.git'
+        }
+     }
+     
+stage('build')
+    {
+        steps {
+     sh 'mvn package'
+        }
+     }
+  stage('Deployment')
+    {
+        steps {
+         deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://172.31.31.62:8080')], contextPath: 'qaapp', war: '**\\*.war'
+
+        }
+     }
+     stage('Testing')
+    {
+        steps {
+         git 'https://github.com/AnupamaSoma/FunctionalTesting.git'
+         sh 'java -jar /var/lib/jenkins/workspace/scripted_pipeline/testing.jar'
+
+        }
+     }
+     stage('Delivery')
+    {
+        steps {
+         
+          deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://172.31.17.232:8080')], contextPath: 'prodapp', war: '**\\*.war'
+        }
+     }
+
+  stage('print string parameter')
+  {
+      steps {
+          echo "${params.Env}"
+          echo "${params.Levels}"
+      }
+  }
+}
+}
+==========================================================================================================================

@@ -1,0 +1,49 @@
+Copy jobs from one server to other
+1st jenkins: 
+
+user: jenkins
+ 
+sudo su - (switch to root user)
+
+su -jenkins (switch to jenkins user)
+
+ssh-keygen:  generating keys
+
+private and public
+
+cd .ssh
+
+=================================
+2nd jenkins
+
+jenkins is running with ubuntu user (java -jar jenkins.war was running with ubuntu)
+
+sudo passwd ubuntu
+
+cd /etc/.ssh/
+
+vi sshd_config
+
+passwordAuthenctication yes
+
+sudo service ssh restart
+
+============================================
+
+1st jenkins
+
+id_rsa ,  id_rsa.pub
+
+ssh-copy-id ubuntu@2nd jenkins private ip
+
+2nd jenkins ubuntu password: password created in before step
+
+cd /var/lib/jenkins/jobs/
+
+list of jobs will be displayed
+
+scp -r development/ ubuntu@2ndjenkinsprivateip:/home/ubuntu/.jenkins/jobs/
+=====================================================================
+
+
+

@@ -1,0 +1,112 @@
+Multi Branch Pipeline
+=========================
+Generally developers create multiple branches and upload
+code related to various functionalities on these branches
+We have to configure Jenkins in such a way that it triggers
+CI-CD process for all these branches parallelly.
+
+To do this we need to have a copy of JEnkinsfile on each branch
+and then based on the instructuions in the Jenkinsfile all
+the stages have to be triggered
+
+=======================================================================
+Developers Activity
+=========================
+1 Clone the maven repository
+  git clone https://github.com/AnupamaSoma/maven-project.git
+
+2 Move into this cloned repository and delete .git folder
+  cd maven
+  rm -rf .git
+
+3 Initilise a new git repository
+  git init
+
+4 Send the files into stagging area and local repository
+  git add .
+  git commit -m "a"
+
+5 Create a jenkins file and put the stages of CI that should happen 
+  on master  branch
+  vim Jenkinsfile
+
+6 Send it to stagging and local repository
+  git add .
+  git commit -m "b"
+
+7 Create a new branch called loans and create  a new Jenkinsfile
+  git checkout -b loans
+  vim Jenkinsfile
+  Use the CI instructions that should be done on Loans branch
+
+8 Send this to stagging and local repoistory
+  git add .
+  git commit -m "c"
+
+9 Open github.com---->Create a new repository
+
+10 Push all the branches from local machine to remote github
+   git push origin --all
+
+Jenkins Admin Activity
+==============================
+1 Open the dashboard of Jenkins
+
+2 Click on New item---->Enter item name as MultBranchPipeline
+
+3 Select MultiBranchPipeline--->OK
+
+4 Go to Branch Sounrces---->Select Git-->enter github url where developers
+  uploaded the code
+
+5 Go to Scan Multi branch pipeline triggers---->Select 1 minute
+
+6 Apply--->Save
+==================================================================
+
+=======================================================================
+Webhooks 
+===========
+This is  used to send notifications from github to jenkins
+Whenever any code changes are done and that is checkdin into
+github, webhook will send an immediate notifiction to JEnkins
+and Jenkins will triggern the job
+
+1 Open github.com---->Click on the reposiotry that we are working on
+2 On the right corner clikc on Setting
+3 Click on Webhooks in the left pannel
+4 Click on Add Webhook
+5 In Payload URL: http://public_ip_jenkinsserver:8080/github-webhook/
+6 In Content type select :application/json
+7 Click on Add Webhook
+8 Open the dashboaard of Jenkins
+9 Go to the job that we want to configure
+10 Go to Build triggers
+11 Check GitHub hook trigger for GITScm polling
+12 Click on Apply--->Save
+   Now if we make any changes to the code in github then github
+  will send an notification to jenkins and jenkins will run that job
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
